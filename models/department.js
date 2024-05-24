@@ -1,158 +1,16 @@
-import excuteQuery from "@/lib/db.js";
-import fs from "fs";
-import util from "util";
+// models/department.js
+
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const Department = {
   async department_register(department) {
     try {
-      // Execute the INSERT query to register the department
-      await excuteQuery({
-        query: "INSERT INTO department (department_name) VALUES (?)",
-        values: [department],
-      });
-
-      return true; // Return true if the department registration is successful
-    } catch (error) {
-      console.error("Error:", error);
-      return false; // Return false if there's an error during department registration
-    }
-  },
-
-  async getAllDepartments() {
-    try {
-      const result = await excuteQuery({
-        query: "SELECT * FROM department",
-      });
-
-      if (result && result.length > 0) {
-        return result; // Return all departments if found
-      } else {
-        return []; // Return an empty array if no departments found
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      throw new Error("An error occurred while querying the database.");
-    }
-  },
-
-  async getDepartmentIdByName(department) {
-    try {
-      const result = await excuteQuery({
-        query: "SELECT id FROM department WHERE department_name = ?",
-        values: [department],
-      });
-
-      if (result && result.length > 0) {
-        return result[0].id;
-      } else {
-        return null;
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      throw new Error("An error occurred while querying the database.");
-    }
-  },
-
-  async findById(id) {
-    try {
-      const result = await excuteQuery({
-        query: "SELECT department_name FROM department WHERE id = ?",
-        values: [id],
-      });
-
-      if (result && result.length > 0) {
-        return result[0]; // Return department details if found
-      } else {
-        return null; // Return null if department not found
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      throw new Error("An error occurred while querying the database.");
-    }
-  },
-
-  async updateDepartmentDetails(
-    id,
-    headOfficer,
-    departmentLandline,
-    location,
-    university,
-    departmentDescription
-  ) {
-    try {
-      // Execute the UPDATE query to update department details
-      const result = await excuteQuery({
-        query: `
-                UPDATE department
-                SET headOfficer = ?, departmentLandline = ?, location = ?, university = ?, description = ?
-                WHERE id = ?
-            `,
-        values: [
-          headOfficer,
-          departmentLandline,
-          location,
-          university,
-          departmentDescription,
-          id,
-        ],
-      });
-
-      if (result.affectedRows > 0) {
-        // Department details successfully updated
-        return true;
-      } else {
-        // No department found with the given ID
-        return false;
-      }
-    } catch (error) {
-      console.error("Error updating department details:", error);
-      throw new Error("An error occurred while updating department details.");
-    }
-  },
-
-  async getDepartmentDetailsById(id) {
-    try {
-      const result = await excuteQuery({
-        query: `
-                SELECT *
-                FROM department
-                WHERE id = ?
-            `,
-        values: [id],
-      });
-
-      if (result && result.length > 0) {
-        return result[0]; // Return department details if found
-      } else {
-        return null; // Return null if department not found
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      throw new Error("An error occurred while querying the database.");
-    }
-  },
-  //Checks if the image exists
-  async imageExists(department_id) {
-    try {
-      const result = await excuteQuery({
-        query: "SELECT 1 FROM department_images WHERE department_id = ?",
-        values: [department_id],
-      });
-
-      return result.length > 0;
-    } catch (error) {
-      console.error("Error:", error);
-      return false;
-    }
-  },
-
-  //Inserts the image
-  async insertDepartmentImage(department_id, imageData, imageFormat) {
-    try {
-      await excuteQuery({
-        query:
-          "INSERT INTO department_images (department_id, image, image_format) VALUES (?, ?, ?)",
-        values: [department_id, imageData, imageFormat],
+      await prisma.department.create({
+        data: {
+          department_name: department,
+        },
       });
       return true;
     } catch (error) {
@@ -161,13 +19,132 @@ const Department = {
     }
   },
 
-  //Update the image
+  async getAllDepartments() {
+    try {
+      return await prisma.department.findMany();
+    } catch (error) {
+      console.error("Error:", error);
+      throw new Error("An error occurred while querying the database.");
+    }
+  },
+
+  async getDepartmentIdByName(department) {
+    try {
+      const result = await prisma.department.findUnique({
+        where: {
+          department_name: department,
+        },
+      });
+      return result ? result.id : null;
+    } catch (error) {
+      console.error("Error:", error);
+      throw new Error("An error occurred while querying the database.");
+    }
+  },
+
+  async findById(id) {
+    try {
+      return await prisma.department.findUnique({
+        where: {
+          id: id,
+        },
+      });
+    } catch (error) {
+      console.error("Error:", error);
+      throw new Error("An error occurred while querying the database.");
+    }
+  },
+
+  async updateDepartmentDetails(id, data) {
+    try {
+      return await prisma.department.update({
+        where: {
+          id: id,
+        },
+        data: {
+          ...data,
+        },
+      });
+    } catch (error) {
+      console.error("Error updating department details:", error);
+      throw new Error("An error occurred while updating department details.");
+    }
+  },
+
+  async getDepartmentDetailsById(id) {
+    try {
+      return await prisma.department.findUnique({
+        where: {
+          id: id,
+        },
+        include: {
+          users: true,
+          department_images: true,
+          inputgoals: true,
+          opportunities: true,
+          strengths: true,
+          threats: true,
+          weaknesses: true,
+          w_tstrats: true,
+          s_tstrats: true,
+          s_ostrats: true,
+          w_ostrats: true,
+          financial_entities: true,
+          stakeholder_entities: true,
+          internal_process_entities: true,
+          learning_growth_entities: true,
+          financial_bscs: true,
+          internal_bscs: true,
+          learning_bscs: true,
+          stakeholder_bscs: true,
+        },
+      });
+    } catch (error) {
+      console.error("Error:", error);
+      throw new Error("An error occurred while querying the database.");
+    }
+  },
+
+  async imageExists(department_id) {
+    try {
+      const result = await prisma.departmentImage.findFirst({
+        where: {
+          department_id: department_id,
+        },
+      });
+      return result !== null;
+    } catch (error) {
+      console.error("Error:", error);
+      return false;
+    }
+  },
+
+  async insertDepartmentImage(department_id, imageData, imageFormat) {
+    try {
+      await prisma.departmentImage.create({
+        data: {
+          department_id: department_id,
+          image: imageData,
+          image_format: imageFormat,
+        },
+      });
+      return true;
+    } catch (error) {
+      console.error("Error:", error);
+      return false;
+    }
+  },
+
   async updateDepartmentImage(department_id, imageData, imageFormat) {
     try {
-      await excuteQuery({
-        query:
-          "UPDATE department_images SET image = ?, image_format = ? WHERE department_id = ?",
-        values: [imageData, imageFormat, department_id],
+      await prisma.departmentImage.update({
+        where: {
+          department_id: department_id,
+        },
+        data: {
+          image: imageData,
+          image_format: imageFormat,
+        },
       });
       return true;
     } catch (error) {
@@ -178,19 +155,19 @@ const Department = {
 
   async getDepartmentImage(department_id) {
     try {
-      const result = await excuteQuery({
-        query:
-          "SELECT image, image_format FROM department_images WHERE department_id = ?",
-        values: [department_id],
+      const result = await prisma.departmentImage.findFirst({
+        where: {
+          department_id: department_id,
+        },
       });
 
-      if (result && result.length > 0) {
+      if (result !== null) {
         return {
-          imageData: result[0].image, // Return the image data
-          imageFormat: result[0].image_format, // Return the image format
+          imageData: result.image,
+          imageFormat: result.image_format,
         };
       } else {
-        return null; // Return null if no image found for the department
+        return null;
       }
     } catch (error) {
       console.error("Error:", error);
@@ -199,4 +176,4 @@ const Department = {
   },
 };
 
-module.exports = Department;
+export default Department;

@@ -1,0 +1,214 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+model User {
+  id                           Int                             @id @default(autoincrement())
+  username                     String
+  email                        String
+  password                     String
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+  generatedAiStrats            Boolean?
+}
+
+model Department {
+  id                           Int                             @id @default(autoincrement())
+  department_name              String
+  headOfficer                  String?
+  departmentLandline           String?
+  location                     String?
+  university                   String?
+  description                  String?
+  users                        User[]
+  department_images            DepartmentImage[]
+  inputgoals                   InputGoal[]
+  opportunities                Opportunity[]
+  strengths                    Strength[]
+  threats                      Threat[]
+  weaknesses                   Weakness[]
+  w_tstrats                    W_TStrat[]
+  s_tstrats                    S_TStrat[]
+  s_ostrats                    S_OStrat[]
+  w_ostrats                    W_OStrat[]
+  financial_entities           FinancialEntity[]
+  stakeholder_entities         StakeholderEntity[]
+  internal_process_entities    InternalProcessEntity[]
+  learning_growth_entities     LearningGrowthEntity[]
+  financial_bscs               FinancialBSC[]
+  internal_bscs                InternalBSC[]
+  learning_bscs                LearningBSC[]
+  stakeholder_bscs             StakeholderBSC[]
+}
+
+model DepartmentImage {
+  id                           Int                             @id @default(autoincrement())
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+  image                        Bytes?
+  image_format                 String?
+}
+
+model InputGoal {
+  id                           Int                             @id @default(autoincrement())
+  vision                       String
+  proposition                  String
+  goals                        String
+  goals2                       String
+  goals3                       String
+  startDate                    DateTime
+  endDate                      DateTime
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model Opportunity {
+  id                           Int                             @id @default(autoincrement())
+  value                        String
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model Strength {
+  id                           Int                             @id @default(autoincrement())
+  value                        String
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model Threat {
+  id                           Int                             @id @default(autoincrement())
+  value                        String
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model Weakness {
+  id                           Int                             @id @default(autoincrement())
+  value                        String
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model W_TStrat {
+  id                           Int                             @id @default(autoincrement())
+  w_tResponses                 String
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model S_TStrat {
+  id                           Int                             @id @default(autoincrement())
+  s_tResponses                 String
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model S_OStrat {
+  id                           Int                             @id @default(autoincrement())
+  s_oResponses                 String
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model W_OStrat {
+  id                           Int                             @id @default(autoincrement())
+  w_oResponses                 String
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model FinancialEntity {
+  id                           Int                             @id @default(autoincrement())
+  input                        String
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model StakeholderEntity {
+  id                           Int                             @id @default(autoincrement())
+  input                        String
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model InternalProcessEntity {
+  id                           Int                             @id @default(autoincrement())
+  input                        String
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model LearningGrowthEntity {
+  id                           Int                             @id @default(autoincrement())
+  input                        String
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model FinancialBSC {
+  id                           Int                             @id @default(autoincrement())
+  target_code                  String?
+  office_target                String?
+  start_date                   DateTime?
+  completion_date              DateTime?
+  status                       String?
+  key_performance_indicator    String?
+  target_performance          Float?
+  actual_performance          Float?
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model InternalBSC {
+  id                           Int                             @id @default(autoincrement())
+  target_code                  String?
+  office_target                String?
+  start_date                   DateTime?
+  completion_date              DateTime?
+  status                       String?
+  key_performance_indicator    String?
+  target_performance          Float?
+  actual_performance          Float?
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model LearningBSC {
+  id                           Int                             @id @default(autoincrement())
+  target_code                  String?
+  office_target                String?
+  start_date                   DateTime?
+  completion_date              DateTime?
+  status                       String?
+  key_performance_indicator    String?
+  target_performance          Float?
+  actual_performance          Float?
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
+
+model StakeholderBSC {
+  id                           Int                             @id @default(autoincrement())
+  target_code                  String?
+  office_target                String?
+  start_date                   DateTime?
+  completion_date              DateTime?
+  status                       String?
+  key_performance_indicator    String?
+  target_performance          Float?
+  actual_performance          Float?
+  department                   Department                      @relation(fields: [department_id], references: [id])
+  department_id                Int
+}
