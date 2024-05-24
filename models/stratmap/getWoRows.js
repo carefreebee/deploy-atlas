@@ -1,22 +1,32 @@
-import excuteQuery from '/lib/db.js';
+// models/getRows.js
+
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const getRows = {
-    async getRows() {
-        try {
-            const query = `
-        SELECT \`w-oResponses\` FROM \`w-ostrat\`
-        WHERE \`w-oResponses\` IS NOT NULL;
-      `;
+  async getRows() {
+    try {
+      const rows = await prisma.w_OStrat.findMany({
+        where: {
+          wOResponses: {
+            not: null,
+          },
+        },
+        select: {
+          wOResponses: true,
+        },
+      });
 
-            const results = await excuteQuery({ query });
+      // Extracting the 'wOResponses' field from each row
+      const responses = rows.map((row) => row.w_oResponses);
 
-            // Flattening is still necessary if your executeQuery function returns a nested structure
-            return results.flat();
-        } catch (error) {
-            console.error("Error fetching rows:", error);
-            return [];
-        }
+      return responses;
+    } catch (error) {
+      console.error("Error fetching rows:", error);
+      return [];
     }
+  },
 };
 
-module.exports = getRows;
+export default getRows;

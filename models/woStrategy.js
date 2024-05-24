@@ -1,49 +1,46 @@
-import excuteQuery from '/lib/db.js';
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const WOStrat = {
-    async postWOStrat(apiResponse, department_id) {
-        try {
-            await excuteQuery({
-                query: 'INSERT INTO `w-ostrat` (`w-oResponses`, department_id) VALUES (?,?)',
-                values: [apiResponse, department_id]
-            });
-              // Return an object containing the response and ID
-              return { response: apiResponse, id: department_id };
-        }
-        catch (error) {
-            console.error("Error:", error);
-            return false;
-        }
-    },
-
-    async getWOStrat(department_id) {
-        try {
-            const result = await excuteQuery({
-                query: 'SELECT * FROM `w-ostrat` WHERE department_id = ?',
-                values: [department_id]
-            });
-
-           return result;
-        } catch (error) {
-            console.error("Error:", error);
-            return null;
-        }
-    },
-
-    async deleteWOStrat(id, department_id) {
-        try {
-            const result = await excuteQuery({
-                query: 'DELETE FROM `w-ostrat` WHERE id = ? AND department_id = ?',
-                values: [id, department_id]
-            });
-            return result.affectedRows > 0;
-        } catch (error) {
-            console.error("Error:", error);
-            return false;
-        }
+  async postWOStrat(apiResponse, departmentId) {
+    try {
+      await prisma.w_OStrat.create({
+        data: {
+          w_oResponses: apiResponse,
+          department: { connect: { id: departmentId } },
+        },
+      });
+      return { response: apiResponse, id: departmentId };
+    } catch (error) {
+      console.error("Error:", error);
+      return false;
     }
+  },
 
+  async getWOStrat(departmentId) {
+    try {
+      const result = await prisma.w_OStrat.findMany({
+        where: { departmentId: departmentId },
+      });
+      return result;
+    } catch (error) {
+      console.error("Error:", error);
+      return null;
+    }
+  },
 
+  async deleteWOStrat(id, departmentId) {
+    try {
+      const result = await prisma.w_OStrat.deleteMany({
+        where: { id: id, departmentId: departmentId },
+      });
+      return result.count > 0;
+    } catch (error) {
+      console.error("Error:", error);
+      return false;
+    }
+  },
 };
 
-module.exports = WOStrat;
+export default WOStrat;

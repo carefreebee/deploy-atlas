@@ -1,413 +1,213 @@
-import excuteQuery from '@/lib/db.js';
-import bcrypt from 'bcryptjs';
+// swot.js
+
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const Swot = {
-    async addStrength(value, departmentId) {
-        try {
-            // Execute the SQL query to insert a new strength entry
-            const result = await excuteQuery({
-                query: 'INSERT INTO strength (value, department_id) VALUES (?, ?)',
-                values: [value, departmentId]
-            });
-    
-            // Check if the query was successful
-            if (result.affectedRows === 1) {
-                // Fetch the newly added strength from the database
-                const addedStrength = await excuteQuery({
-                    query: 'SELECT id, value FROM strength WHERE id = LAST_INSERT_ID()',
-                    values: []
-                });
-    
-                // Return the added strength data
-                return {
-                    success: true,
-                    data: addedStrength[0] // Assuming the query returns an array with the added strength object
-                };
-            } else {
-                return { success: false, message: 'Failed to add strength' };
-            }
-        } catch (error) {
-            console.error('Error adding strength:', error);
-            return { success: false, message: 'An error occurred while adding strength' };
-        }
-    },
+  async addStrength(value, departmentId) {
+    try {
+      const addedStrength = await prisma.strength.create({
+        data: {
+          value: value,
+          department: { connect: { id: departmentId } },
+        },
+      });
+      return { success: true, data: addedStrength };
+    } catch (error) {
+      console.error("Error adding strength:", error);
+      return { success: false, message: "An error occurred while adding strength" };
+    }
+  },
 
-    async getStrengthsByDepartmentId(departmentId) {
-        try {
-            // Execute the SQL query to fetch strengths by department ID
-            const result = await excuteQuery({
-                query: 'SELECT id, value FROM strength WHERE department_id = ?',
-                values: [departmentId]
-            });
-    
-            // Return the fetched strengths
-            return {
-                success: true,
-                strengths: result.map(strength => ({
-                    id: strength.id,
-                    value: strength.value
-                }))
-            };
-        } catch (error) {
-            console.error('Error fetching strengths:', error);
-            return { success: false, message: 'An error occurred while fetching strengths' };
-        }
-    },
+  async getStrengthsByDepartmentId(departmentId) {
+    try {
+      const strengths = await prisma.strength.findMany({
+        where: { departmentId: departmentId },
+        select: { id: true, value: true },
+      });
+      return { success: true, strengths: strengths };
+    } catch (error) {
+      console.error("Error fetching strengths:", error);
+      return { success: false, message: "An error occurred while fetching strengths" };
+    }
+  },
 
-    async editStrength(id, value, departmentId) {
-        try {
-            // Execute the SQL query to update the strength
-            const result = await excuteQuery({
-                query: 'UPDATE strength SET value = ? WHERE id = ? AND department_id = ?',
-                values: [value, id, departmentId]
-            });
-    
-            // Check if the query was successful
-            if (result.affectedRows === 1) {
-                // Query the database to fetch the updated strength
-                const updatedStrength = await excuteQuery({
-                    query: 'SELECT * FROM strength WHERE id = ? AND department_id = ?',
-                    values: [id, departmentId]
-                });
-    
-                // Return the success message along with the updated strength value
-                return {
-                    success: true,
-                    updatedStrength: updatedStrength[0] // Assuming only one row is updated
-                };
-            } else {
-                return { success: false, message: 'Failed to update strength' };
-            }
-        } catch (error) {
-            console.error('Error updating strength:', error);
-            return { success: false, message: 'An error occurred while updating strength' };
-        }
-    },
-    
-    async deleteStrength(id, departmentId) {
-        try {
-            // Execute the SQL query to delete the strength
-            const result = await excuteQuery({
-                query: 'DELETE FROM strength WHERE id = ? AND department_id = ?',
-                values: [id, departmentId]
-            });
+  async editStrength(id, value, departmentId) {
+    try {
+      const updatedStrength = await prisma.strength.update({
+        where: { id: id },
+        data: { value: value },
+      });
+      return { success: true, updatedStrength: updatedStrength };
+    } catch (error) {
+      console.error("Error updating strength:", error);
+      return { success: false, message: "An error occurred while updating strength" };
+    }
+  },
 
-            // Check if the query was successful
-            if (result.affectedRows === 1) {
-                return { success: true, message: 'Strength deleted successfully' };
-            } else {
-                return { success: false, message: 'Failed to delete strength' };
-            }
-        } catch (error) {
-            console.error('Error deleting strength:', error);
-            return { success: false, message: 'An error occurred while deleting strength' };
-        }
-    },
+  async deleteStrength(id, departmentId) {
+    try {
+      await prisma.strength.delete({ where: { id: id } });
+      return { success: true, message: "Strength deleted successfully" };
+    } catch (error) {
+      console.error("Error deleting strength:", error);
+      return { success: false, message: "An error occurred while deleting strength" };
+    }
+  },
 
-    async addWeakness(value, departmentId) {
-        try {
-           
-            const result = await excuteQuery({
-                query: 'INSERT INTO weakness (value, department_id) VALUES (?, ?)',
-                values: [value, departmentId]
-            });
-    
-            if (result.affectedRows === 1) {
-               
-                const addedWeakness = await excuteQuery({
-                    query: 'SELECT id, value FROM weakness WHERE id = LAST_INSERT_ID()',
-                    values: []
-                });
-    
-                return {
-                    success: true,
-                    data: addedWeakness[0] 
-                };
-            } else {
-                return { success: false, message: 'Failed to add weakness' };
-            }
-        } catch (error) {
-            console.error('Error adding weakness:', error);
-            return { success: false, message: 'An error occurred while adding weakness' };
-        }
-    },
+  async addWeakness(value, departmentId) {
+    try {
+      const addedWeakness = await prisma.weakness.create({
+        data: {
+          value: value,
+          department: { connect: { id: departmentId } },
+        },
+      });
+      return { success: true, data: addedWeakness };
+    } catch (error) {
+      console.error("Error adding weakness:", error);
+      return { success: false, message: "An error occurred while adding weakness" };
+    }
+  },
 
-    async getWeaknessByDepartmentId(departmentId) {
-        try {
-            // Execute the SQL query to fetch strengths by department ID
-            const result = await excuteQuery({
-                query: 'SELECT id, value FROM weakness WHERE department_id = ?',
-                values: [departmentId]
-            });
-    
-            // Return the fetched strengths
-            return {
-                success: true,
-                weaknesses: result.map(weakness => ({
-                  id: weakness.id,
-                  value: weakness.value
-                }))
-              };
-        } catch (error) {
-            console.error('Error fetching weakness:', error);
-            return { success: false, message: 'An error occurred while fetching weakness' };
-        }
-    },
+  async getWeaknessesByDepartmentId(departmentId) {
+    try {
+      const weaknesses = await prisma.weakness.findMany({
+        where: { departmentId: departmentId },
+        select: { id: true, value: true },
+      });
+      return { success: true, weaknesses: weaknesses };
+    } catch (error) {
+      console.error("Error fetching weaknesses:", error);
+      return { success: false, message: "An error occurred while fetching weaknesses" };
+    }
+  },
 
-    async editWeakness(id, value, departmentId) {
-        try {
-            // Execute the SQL query to update the strength
-            const result = await excuteQuery({
-                query: 'UPDATE weakness SET value = ? WHERE id = ? AND department_id = ?',
-                values: [value, id, departmentId]
-            });
-    
-            // Check if the query was successful
-            if (result.affectedRows === 1) {
-                // Query the database to fetch the updated strength
-                const updatedWeakness = await excuteQuery({
-                    query: 'SELECT * FROM weakness WHERE id = ? AND department_id = ?',
-                    values: [id, departmentId]
-                });
-    
-                // Return the success message along with the updated strength value
-                return {
-                    success: true,
-                    updatedWeakness: updatedWeakness[0] // Assuming only one row is updated
-                };
-            } else {
-                return { success: false, message: 'Failed to update weakness' };
-            }
-        } catch (error) {
-            console.error('Error updating weakness:', error);
-            return { success: false, message: 'An error occurred while updating weakness' };
-        }
-    },
+  async editWeakness(id, value, departmentId) {
+    try {
+      const updatedWeakness = await prisma.weakness.update({
+        where: { id: id },
+        data: { value: value },
+      });
+      return { success: true, updatedWeakness: updatedWeakness };
+    } catch (error) {
+      console.error("Error updating weakness:", error);
+      return { success: false, message: "An error occurred while updating weakness" };
+    }
+  },
 
-    async deleteWeakness(id, departmentId) {
-        try {
-            // Execute the SQL query to delete the strength
-            const result = await excuteQuery({
-                query: 'DELETE FROM weakness WHERE id = ? AND department_id = ?',
-                values: [id, departmentId]
-            });
+  async deleteWeakness(id, departmentId) {
+    try {
+      await prisma.weakness.delete({ where: { id: id } });
+      return { success: true, message: "Weakness deleted successfully" };
+    } catch (error) {
+      console.error("Error deleting weakness:", error);
+      return { success: false, message: "An error occurred while deleting weakness" };
+    }
+  },
 
-            // Check if the query was successful
-            if (result.affectedRows === 1) {
-                return { success: true, message: 'Weakness deleted successfully' };
-            } else {
-                return { success: false, message: 'Failed to delete weakness' };
-            }
-        } catch (error) {
-            console.error('Error deleting weakness:', error);
-            return { success: false, message: 'An error occurred while deleting weakness' };
-        }
-    },
+  async addOpportunity(value, departmentId) {
+    try {
+      const addedOpportunity = await prisma.opportunity.create({
+        data: {
+          value: value,
+          department: { connect: { id: departmentId } },
+        },
+      });
+      return { success: true, data: addedOpportunity };
+    } catch (error) {
+      console.error("Error adding opportunity:", error);
+      return { success: false, message: "An error occurred while adding opportunity" };
+    }
+  },
 
-    async addOpportunities(value, departmentId) {
-        try {
-           
-            const result = await excuteQuery({
-                query: 'INSERT INTO opportunities (value, department_id) VALUES (?, ?)',
-                values: [value, departmentId]
-            });
-    
-            if (result.affectedRows === 1) {
-               
-                const addedOpportunities = await excuteQuery({
-                    query: 'SELECT id, value FROM opportunities WHERE id = LAST_INSERT_ID()',
-                    values: []
-                });
-    
-                return {
-                    success: true,
-                    data: addedOpportunities[0] 
-                };
-            } else {
-                return { success: false, message: 'Failed to add opportunities' };
-            }
-        } catch (error) {
-            console.error('Error adding opportunities:', error);
-            return { success: false, message: 'An error occurred while adding opportunities' };
-        }
-    },
+  async getOpportunitiesByDepartmentId(departmentId) {
+    try {
+      const opportunities = await prisma.opportunity.findMany({
+        where: { departmentId: departmentId },
+        select: { id: true, value: true },
+      });
+      return { success: true, opportunities: opportunities };
+    } catch (error) {
+      console.error("Error fetching opportunities:", error);
+      return { success: false, message: "An error occurred while fetching opportunities" };
+    }
+  },
 
-    async getOpportunitiesByDepartmentId(departmentId) {
-        try {
-            // Execute the SQL query to fetch opportunities by department ID
-            const result = await excuteQuery({
-                query: 'SELECT id, value FROM opportunities WHERE department_id = ?',
-                values: [departmentId]
-            });
-    
-            // Return the fetched opportunities
-            return {
-                success: true,
-                opportunities: result.map(opportunity => ({
-                  id: opportunity.id,
-                  value: opportunity.value
-                }))
-              };
-        } catch (error) {
-            console.error('Error fetching opportunities:', error);
-            return { success: false, message: 'An error occurred while fetching opportunities' };
-        }
-    },
+  async editOpportunity(id, value, departmentId) {
+    try {
+      const updatedOpportunity = await prisma.opportunity.update({
+        where: { id: id },
+        data: { value: value },
+      });
+      return { success: true, updatedOpportunity: updatedOpportunity };
+    } catch (error) {
+      console.error("Error updating opportunity:", error);
+      return { success: false, message: "An error occurred while updating opportunity" };
+    }
+  },
 
-    async editOpportunities(id, value, departmentId) {
-        try {
-            // Execute the SQL query to update the strength
-            const result = await excuteQuery({
-                query: 'UPDATE opportunities SET value = ? WHERE id = ? AND department_id = ?',
-                values: [value, id, departmentId]
-            });
-    
-            // Check if the query was successful
-            if (result.affectedRows === 1) {
-                // Query the database to fetch the updated strength
-                const updatedOpportunities = await excuteQuery({
-                    query: 'SELECT * FROM opportunities WHERE id = ? AND department_id = ?',
-                    values: [id, departmentId]
-                });
-    
-                // Return the success message along with the updated strength value
-                return {
-                    success: true,
-                    updatedOpportunities: updatedOpportunities[0] // Assuming only one row is updated
-                };
-            } else {
-                return { success: false, message: 'Failed to update opportunities' };
-            }
-        } catch (error) {
-            console.error('Error updating opportunities:', error);
-            return { success: false, message: 'An error occurred while updating opportunities' };
-        }
-    },
+  async deleteOpportunity(id, departmentId) {
+    try {
+      await prisma.opportunity.delete({ where: { id: id } });
+      return { success: true, message: "Opportunity deleted successfully" };
+    } catch (error) {
+      console.error("Error deleting opportunity:", error);
+      return { success: false, message: "An error occurred while deleting opportunity" };
+    }
+  },
 
-    async deleteOpportunities(id, departmentId) {
-        try {
-            // Execute the SQL query to delete the strength
-            const result = await excuteQuery({
-                query: 'DELETE FROM opportunities WHERE id = ? AND department_id = ?',
-                values: [id, departmentId]
-            });
+  async addThreat(value, departmentId) {
+    try {
+      const addedThreat = await prisma.threat.create({
+        data: {
+          value: value,
+          department: { connect: { id: departmentId } },
+        },
+      });
+      return { success: true, data: addedThreat };
+    } catch (error) {
+      console.error("Error adding threat:", error);
+      return { success: false, message: "An error occurred while adding threat" };
+    }
+  },
 
-            // Check if the query was successful
-            if (result.affectedRows === 1) {
-                return { success: true, message: 'Opportunities deleted successfully' };
-            } else {
-                return { success: false, message: 'Failed to delete opportunities' };
-            }
-        } catch (error) {
-            console.error('Error deleting opportunities:', error);
-            return { success: false, message: 'An error occurred while deleting opportunities' };
-        }
-    },
+  async getThreatsByDepartmentId(departmentId) {
+    try {
+      const threats = await prisma.threat.findMany({
+        where: { departmentId: departmentId },
+        select: { id: true, value: true },
+      });
+      return { success: true, threats: threats };
+    } catch (error) {
+      console.error("Error fetching threats:", error);
+      return { success: false, message: "An error occurred while fetching threats" };
+    }
+  },
 
+  async editThreat(id, value, departmentId) {
+    try {
+      const updatedThreat = await prisma.threat.update({
+        where: { id: id },
+        data: { value: value },
+      });
+      return { success: true, updatedThreat: updatedThreat };
+    } catch (error) {
+      console.error("Error updating threat:", error);
+      return { success: false, message: "An error occurred while updating threat" };
+    }
+  },
 
-    async addThreats(value, departmentId) {
-        try {
-           
-            const result = await excuteQuery({
-                query: 'INSERT INTO threats (value, department_id) VALUES (?, ?)',
-                values: [value, departmentId]
-            });
-    
-            if (result.affectedRows === 1) {
-               
-                const addedThreats = await excuteQuery({
-                    query: 'SELECT id, value FROM threats WHERE id = LAST_INSERT_ID()',
-                    values: []
-                });
-    
-                return {
-                    success: true,
-                    data: addedThreats[0] 
-                };
-            } else {
-                return { success: false, message: 'Failed to add threats' };
-            }
-        } catch (error) {
-            console.error('Error adding threats:', error);
-            return { success: false, message: 'An error occurred while adding threats' };
-        }
-    },
-
-
-    async getThreatsByDepartmentId(departmentId) {
-        try {
-            // Execute the SQL query to fetch threats by department ID
-            const result = await excuteQuery({
-                query: 'SELECT id, value FROM threats WHERE department_id = ?',
-                values: [departmentId]
-            });
-    
-            // Return the fetched threats
-            return {
-                success: true,
-                threats: result.map(threat => ({
-                    id: threat.id,
-                    value: threat.value
-                }))
-            };
-        } catch (error) {
-            console.error('Error fetching threats:', error);
-            return { success: false, message: 'An error occurred while fetching threats' };
-        }
-    },
-    
-
-    async editThreats(id, value, departmentId) {
-        try {
-            // Execute the SQL query to update the strength
-            const result = await excuteQuery({
-                query: 'UPDATE threats SET value = ? WHERE id = ? AND department_id = ?',
-                values: [value, id, departmentId]
-            });
-    
-            // Check if the query was successful
-            if (result.affectedRows === 1) {
-                // Query the database to fetch the updated strength
-                const updatedThreats = await excuteQuery({
-                    query: 'SELECT * FROM threats WHERE id = ? AND department_id = ?',
-                    values: [id, departmentId]
-                });
-    
-                // Return the success message along with the updated strength value
-                return {
-                    success: true,
-                    updatedThreats: updatedThreats[0] // Assuming only one row is updated
-                };
-            } else {
-                return { success: false, message: 'Failed to update threats' };
-            }
-        } catch (error) {
-            console.error('Error updating threats:', error);
-            return { success: false, message: 'An error occurred while updating threats' };
-        }
-    },
-
-    async deleteThreats(id, departmentId) {
-        try {
-            // Execute the SQL query to delete the strength
-            const result = await excuteQuery({
-                query: 'DELETE FROM threats WHERE id = ? AND department_id = ?',
-                values: [id, departmentId]
-            });
-
-            // Check if the query was successful
-            if (result.affectedRows === 1) {
-                return { success: true, message: 'Threats deleted successfully' };
-            } else {
-                return { success: false, message: 'Failed to delete threats' };
-            }
-        } catch (error) {
-            console.error('Error deleting threats:', error);
-            return { success: false, message: 'An error occurred while deleting threats' };
-        }
-    },
-
-
+  async deleteThreat(id, departmentId) {
+    try {
+      await prisma.threat.delete({ where: { id: id } });
+      return { success: true, message: "Threat deleted successfully" };
+    } catch (error) {
+      console.error("Error deleting threat:", error);
+      return { success: false, message: "An error occurred while deleting threat" };
+    }
+  },
 };
 
-module.exports = Swot;
+export default Swot;

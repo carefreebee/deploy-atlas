@@ -1,11 +1,17 @@
-import excuteQuery from "/lib/db.js";
+// models/LearningGrowthEntity.js
+
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const LearningGrowthEntity = {
-  async postLGEntity(input, department_id) {
+  async postLGEntity(input, departmentId) {
     try {
-      await excuteQuery({
-        query: "INSERT INTO learning_bsc (department_id, office_target) VALUES (?, ?)",
-        values: [department_id, input],
+      await prisma.learningGrowthEntity.create({
+        data: {
+          departmentId: departmentId,
+          officeTarget: input,
+        },
       });
       return true;
     } catch (error) {
@@ -14,11 +20,12 @@ const LearningGrowthEntity = {
     }
   },
 
-  async getByDepartmentId(department_id) {
+  async getByDepartmentId(departmentId) {
     try {
-      return await excuteQuery({
-        query: "SELECT * FROM learning_growth_entity WHERE department_id = ?",
-        values: [department_id],
+      return await prisma.learningGrowthEntity.findMany({
+        where: {
+          departmentId: departmentId,
+        },
       });
     } catch (error) {
       console.error("Error fetching learning growth entities:", error);
@@ -28,16 +35,16 @@ const LearningGrowthEntity = {
 
   async editLGEntity(id, input) {
     try {
-      const result = await excuteQuery({
-        query: "UPDATE learning_growth_entity SET input = ? WHERE id = ?",
-        values: [input, id],
+      await prisma.learningGrowthEntity.update({
+        where: {
+          id: id,
+        },
+        data: {
+          input: input,
+        },
       });
 
-      if (result.affectedRows === 1) {
-        return { success: true, message: "LG entity updated successfully" };
-      } else {
-        return { success: false, message: "Failed to update LG entity" };
-      }
+      return { success: true, message: "LG entity updated successfully" };
     } catch (error) {
       console.error("Error updating LG entity:", error);
       return { success: false, message: "An error occurred while updating LG entity" };
@@ -46,18 +53,15 @@ const LearningGrowthEntity = {
 
   async deleteLGEntity(id) {
     try {
-      const result = await excuteQuery({
-        query: "DELETE FROM learning_growth_entity WHERE id = ?",
-        values: [id],
+      await prisma.learningGrowthEntity.delete({
+        where: {
+          id: id,
+        },
       });
 
-      if (result.affectedRows === 1) {
-        return true;
-      } else {
-        return false;
-      }
+      return true;
     } catch (error) {
-      console.error("Error deleting strength:", error);
+      console.error("Error deleting learning growth entity:", error);
       return false;
     }
   },

@@ -1,11 +1,17 @@
-import excuteQuery from "/lib/db.js";
+// models/StakeholderEntity.js
+
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const StakeholderEntity = {
-  async postStakeholderEntity(input, department_id) {
+  async postStakeholderEntity(input, departmentId) {
     try {
-      await excuteQuery({
-        query: "INSERT INTO stakeholder_bsc (department_id, office_target) VALUES (?, ?)",
-        values: [department_id, input],
+      await prisma.stakeholderEntity.create({
+        data: {
+          departmentId: departmentId,
+          officeTarget: input,
+        },
       });
       return true;
     } catch (error) {
@@ -14,11 +20,12 @@ const StakeholderEntity = {
     }
   },
 
-  async getByDepartmentId(department_id) {
+  async getByDepartmentId(departmentId) {
     try {
-      return await excuteQuery({
-        query: "SELECT * FROM stakeholder_entity WHERE department_id = ?",
-        values: [department_id],
+      return await prisma.stakeholderEntity.findMany({
+        where: {
+          departmentId: departmentId,
+        },
       });
     } catch (error) {
       console.error("Error fetching stakeholder entities:", error);
@@ -28,34 +35,31 @@ const StakeholderEntity = {
 
   async editStakeholderEntity(id, input) {
     try {
-      const result = await excuteQuery({
-        query: "UPDATE stakeholder_entity SET input = ? WHERE id = ?",
-        values: [input, id],
+      await prisma.stakeholderEntity.update({
+        where: {
+          id: id,
+        },
+        data: {
+          input: input,
+        },
       });
 
-      if (result.affectedRows === 1) {
-        return { success: true, message: "Stakeholder entity updated successfully" };
-      } else {
-        return { success: false, message: "Failed to update Stakeholder entity" };
-      }
+      return { success: true, message: "Stakeholder entity updated successfully" };
     } catch (error) {
-      console.error("Error updating IP entity:", error);
+      console.error("Error updating Stakeholder entity:", error);
       return { success: false, message: "An error occurred while updating Stakeholder entity" };
     }
   },
 
   async deleteStakeholderEntity(id) {
     try {
-      const result = await excuteQuery({
-        query: "DELETE FROM stakeholder_entity WHERE id = ?",
-        values: [id],
+      await prisma.stakeholderEntity.delete({
+        where: {
+          id: id,
+        },
       });
 
-      if (result.affectedRows === 1) {
-        return { success: true };
-      } else {
-        return { success: false, message: "Failed to delete stakeholder" };
-      }
+      return { success: true };
     } catch (error) {
       console.error("Error deleting stakeholder:", error);
       return { success: false, message: "An error occurred while deleting stakeholder" };

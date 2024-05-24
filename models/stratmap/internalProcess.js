@@ -1,11 +1,17 @@
-import excuteQuery from "/lib/db.js";
+// models/InternalProcess.js
+
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const InternalProcess = {
-  async postIPEntity(input, department_id) {
+  async postIPEntity(input, departmentId) {
     try {
-      await excuteQuery({
-        query: "INSERT INTO internal_bsc (department_id, office_target) VALUES (?, ?)",
-        values: [department_id, input],
+      await prisma.internalProcessEntity.create({
+        data: {
+          departmentId: departmentId,
+          officeTarget: input,
+        },
       });
       return true;
     } catch (error) {
@@ -14,11 +20,12 @@ const InternalProcess = {
     }
   },
 
-  async getByDepartmentId(department_id) {
+  async getByDepartmentId(departmentId) {
     try {
-      return await excuteQuery({
-        query: "SELECT * FROM internal_process_entity WHERE department_id = ?",
-        values: [department_id],
+      return await prisma.internalProcessEntity.findMany({
+        where: {
+          departmentId: departmentId,
+        },
       });
     } catch (error) {
       console.error("Error fetching internal process entities:", error);
@@ -28,16 +35,16 @@ const InternalProcess = {
 
   async editIPEntity(id, input) {
     try {
-      const result = await excuteQuery({
-        query: "UPDATE internal_process_entity SET input = ? WHERE id = ?",
-        values: [input, id],
+      await prisma.internalProcessEntity.update({
+        where: {
+          id: id,
+        },
+        data: {
+          input: input,
+        },
       });
 
-      if (result.affectedRows === 1) {
-        return { success: true, message: "IP entity updated successfully" };
-      } else {
-        return { success: false, message: "Failed to update IP entity" };
-      }
+      return { success: true, message: "IP entity updated successfully" };
     } catch (error) {
       console.error("Error updating IP entity:", error);
       return { success: false, message: "An error occurred while updating IP entity" };
@@ -46,16 +53,13 @@ const InternalProcess = {
 
   async deleteIPEntity(id) {
     try {
-      const result = await excuteQuery({
-        query: "DELETE FROM internal_process_entity WHERE id = ?",
-        values: [id],
+      await prisma.internalProcessEntity.delete({
+        where: {
+          id: id,
+        },
       });
 
-      if (result.affectedRows === 1) {
-        return true;
-      } else {
-        return false;
-      }
+      return true;
     } catch (error) {
       console.error("Error deleting internal process entity:", error);
       return false;

@@ -1,11 +1,15 @@
-import excuteQuery from "/lib/db.js";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const FinancialEntity = {
-  async postFinancialEntity(input, department_id) {
+  async postFinancialEntity(input, departmentId) {
     try {
-      await excuteQuery({
-        query: "INSERT INTO financial_bsc (department_id, office_target) VALUES (?, ?)",
-        values: [department_id, input],
+      await prisma.financialEntity.create({
+        data: {
+          departmentId: departmentId,
+          officeTarget: input,
+        },
       });
       return true;
     } catch (error) {
@@ -14,11 +18,12 @@ const FinancialEntity = {
     }
   },
 
-  async getByDepartmentId(department_id) {
+  async getByDepartmentId(departmentId) {
     try {
-      return await excuteQuery({
-        query: "SELECT * FROM financial_entity WHERE department_id = ?",
-        values: [department_id],
+      return await prisma.financialEntity.findMany({
+        where: {
+          departmentId: departmentId,
+        },
       });
     } catch (error) {
       console.error("Error fetching financial entities:", error);
@@ -28,12 +33,16 @@ const FinancialEntity = {
 
   async editFinancialEntity(id, input) {
     try {
-      const result = await excuteQuery({
-        query: "UPDATE financial_entity SET input = ? WHERE id = ?",
-        values: [input, id],
+      const result = await prisma.financialEntity.update({
+        where: {
+          id: id,
+        },
+        data: {
+          input: input,
+        },
       });
 
-      if (result.affectedRows === 1) {
+      if (result) {
         return { success: true, message: "Financial entity updated successfully" };
       } else {
         return { success: false, message: "Failed to update financial entity" };
@@ -46,12 +55,13 @@ const FinancialEntity = {
 
   async deleteFinancialEntity(id) {
     try {
-      const result = await excuteQuery({
-        query: "DELETE FROM financial_entity WHERE id = ?",
-        values: [id],
+      const result = await prisma.financialEntity.delete({
+        where: {
+          id: id,
+        },
       });
 
-      if (result.affectedRows === 1) {
+      if (result) {
         return { success: true, message: "Financial entity deleted successfully" };
       } else {
         return { success: false, message: "Failed to delete financial entity" };
